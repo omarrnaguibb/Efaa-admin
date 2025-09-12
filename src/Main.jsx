@@ -12,7 +12,9 @@ const Main = () => {
   const [user, setUser] = useState({ data: {}, active: false });
 
   const [price, setPrice] = useState(null);
-
+  useEffect(() => {
+    if (!localStorage.getItem("token")) window.location.href = "/login";
+  }, []);
   const uniqueNum = () =>
     Math.floor(Math.random() * (10000000 - 999999 + 1)) + 999999;
 
