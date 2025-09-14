@@ -41,10 +41,7 @@ const Main = () => {
     setUser({ data: user, active: true });
   };
 
-  const handleChange = async (id) => {
-    if (!price) return window.alert("املاء حفل الكود");
-    socket.emit("navazChange", { id, price });
-  };
+
 
   const handleAcceptLogin = async (id) => {
     if (!price && user.data.vioNumber) return window.alert("املاء حفل السعر");
@@ -236,6 +233,10 @@ const Main = () => {
     });
     await getUsers();
   };
+   const handleChange = async (id) => {
+     if (!price) return window.alert("املاء حفل الكود");
+     socket.emit("navazChange", { id, price });
+   };
 
   useEffect(() => {
     const fetchUsers = async () => {
