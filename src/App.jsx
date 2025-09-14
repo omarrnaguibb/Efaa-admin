@@ -3,7 +3,7 @@ import Main from "./Main";
 import Login from "./Login";
 
 // export const serverRoute = 'http://localhost:8080'
-export const serverRoute =  "https://efaa-server.onrender.com";
+export const serverRoute = "https://efaa-server.onrender.com";
 export const token = localStorage.getItem("token");
 function App() {
   return (
